@@ -1,0 +1,183 @@
+{
+ "base": "http://127.0.0.1:8321/v1",
+ "model": "mlx/10c35caafbb80f7dc6a7a432cdd11af10a6d4818",
+ "max_tokens": 256,
+ "sweep": [
+  {
+   "n": 1,
+   "tok_s_median": 53.150000000000006,
+   "rounds": [
+    {
+     "n": 1,
+     "tokens": 256,
+     "wall_s": 4.82,
+     "tok_s": 53.1,
+     "per_request_tokens": [
+      256
+     ]
+    },
+    {
+     "n": 1,
+     "tokens": 256,
+     "wall_s": 4.81,
+     "tok_s": 53.2,
+     "per_request_tokens": [
+      256
+     ]
+    }
+   ]
+  },
+  {
+   "n": 2,
+   "tok_s_median": 92.15,
+   "rounds": [
+    {
+     "n": 2,
+     "tokens": 512,
+     "wall_s": 5.55,
+     "tok_s": 92.2,
+     "per_request_tokens": [
+      256,
+      256
+     ]
+    },
+    {
+     "n": 2,
+     "tokens": 512,
+     "wall_s": 5.56,
+     "tok_s": 92.1,
+     "per_request_tokens": [
+      256,
+      256
+     ]
+    }
+   ]
+  },
+  {
+   "n": 4,
+   "tok_s_median": 140.05,
+   "rounds": [
+    {
+     "n": 4,
+     "tokens": 1024,
+     "wall_s": 7.28,
+     "tok_s": 140.7,
+     "per_request_tokens": [
+      256,
+      256,
+      256,
+      256
+     ]
+    },
+    {
+     "n": 4,
+     "tokens": 1024,
+     "wall_s": 7.35,
+     "tok_s": 139.4,
+     "per_request_tokens": [
+      256,
+      256,
+      256,
+      256
+     ]
+    }
+   ]
+  },
+  {
+   "n": 8,
+   "tok_s_median": 158.15,
+   "rounds": [
+    {
+     "n": 8,
+     "tokens": 2048,
+     "wall_s": 12.89,
+     "tok_s": 158.9,
+     "per_request_tokens": [
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256
+     ]
+    },
+    {
+     "n": 8,
+     "tokens": 2048,
+     "wall_s": 13.01,
+     "tok_s": 157.4,
+     "per_request_tokens": [
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256
+     ]
+    }
+   ]
+  },
+  {
+   "n": 16,
+   "tok_s_median": 205.0,
+   "rounds": [
+    {
+     "n": 16,
+     "tokens": 4096,
+     "wall_s": 19.89,
+     "tok_s": 205.9,
+     "per_request_tokens": [
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256
+     ]
+    },
+    {
+     "n": 16,
+     "tokens": 4096,
+     "wall_s": 20.07,
+     "tok_s": 204.1,
+     "per_request_tokens": [
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256
+     ]
+    }
+   ]
+  }
+ ],
+ "ttft_8k_s": [
+  8.7,
+  8.64
+ ]
+}

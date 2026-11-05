@@ -1,0 +1,69 @@
+{
+ "base": "http://127.0.0.1:11600/v1",
+ "model": "q38-27b-oq4e-mtp",
+ "max_tokens": 256,
+ "sweep": [
+  {
+   "n": 1,
+   "tok_s_median": 44.85,
+   "rounds": [
+    {
+     "n": 1,
+     "tokens": 256,
+     "wall_s": 5.69,
+     "tok_s": 45.0,
+     "per_request_tokens": [
+      256
+     ]
+    },
+    {
+     "n": 1,
+     "tokens": 256,
+     "wall_s": 5.73,
+     "tok_s": 44.7,
+     "per_request_tokens": [
+      256
+     ]
+    }
+   ]
+  },
+  {
+   "n": 8,
+   "tok_s_median": 216.45,
+   "rounds": [
+    {
+     "n": 8,
+     "tokens": 2048,
+     "wall_s": 9.46,
+     "tok_s": 216.6,
+     "per_request_tokens": [
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256
+     ]
+    },
+    {
+     "n": 8,
+     "tokens": 2048,
+     "wall_s": 9.47,
+     "tok_s": 216.3,
+     "per_request_tokens": [
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256,
+      256
+     ]
+    }
+   ]
+  }
+ ]
+}

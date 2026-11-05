@@ -1,0 +1,56 @@
+diff --git a/locals/models/qwenputer.py b/locals/models/qwenputer.py
+index c8dcb7b..80f7af6 100644
+--- a/locals/models/qwenputer.py
++++ b/locals/models/qwenputer.py
+@@ -44,7 +44,10 @@ import numpy as np
+ 
+ REPO = "divagr1925/Qwen3.5-4B-Qwenputer"
+ REVISION = "2d9068508f2b680badb7abcded96fdd107e9ba5d"  # the checkpoint the chip pack is made from
+-BASE = "mlx-community/Qwen3.5-4B-MLX-4bit"  # Qwen's part: its 32 layers, quantized, are this model's bit for bit
++DEFAULT_BASE = "mlx-community/Qwen3.5-4B-MLX-4bit"  # Qwen's part: its 32 layers, quantized, are this model's bit for bit
++# LOCALS_QWENPUTER_BASE: another model of the Qwen3.5 family as Qwen's part (the computer reads and writes text only, so
++# one with Qwen3.5's vocabulary and tool-call format works), e.g. mlx-community/Qwen3.8-27B-4bit
++BASE = os.environ.get("LOCALS_QWENPUTER_BASE", DEFAULT_BASE)
+ # The authors' reference package (their RV32 machine, circuit compiler, text bridge): it loads the firmware into a
+ # chip pack, and drafts the computer's runs while Locals serves (``chipformer()``).
+ CHIPFORMER = "ca13310e2f9f788d1dd3feeea8213c1b0c23913c"
+diff --git a/locals/service.py b/locals/service.py
+index 3c61b5e..12892cf 100644
+--- a/locals/service.py
++++ b/locals/service.py
+@@ -480,8 +480,10 @@ class BatchService:
+ 
+             from .hybrid_batch import DiskPromptCache
+ 
+-            tag = (self.model_id.strip("/").replace("/", "--")[-80:] + "--" + str(getattr(rt, "dtype", "")).split(".")[-1]
+-                   + "--" + _weights_fingerprint(self.model_id))
++            # (Qwenputer on another Qwen part, LOCALS_QWENPUTER_BASE: its cached states kept apart from the 4B's)
++            cache_id = self.model_id if not calc or QP.BASE == QP.DEFAULT_BASE else self.model_id + "@" + Path(QP.BASE).name
++            tag = (cache_id.strip("/").replace("/", "--")[-80:] + "--" + str(getattr(rt, "dtype", "")).split(".")[-1]
++                   + "--" + _weights_fingerprint(QP.BASE if calc else self.model_id))
+             root = Path(os.environ.get("LOCALS_DISK_CACHE_DIR") or Path.home() / ".cache" / "locals" / "prompts")
+             try:
+                 eng.disk = DiskPromptCache(root / tag, disk_gb)
+diff --git a/tests/test_qwenputer_base.py b/tests/test_qwenputer_base.py
+new file mode 100644
+index 0000000..7893f2e
+--- /dev/null
++++ b/tests/test_qwenputer_base.py
+@@ -0,0 +1,17 @@
++"""LOCALS_QWENPUTER_BASE: Qwenputer's Qwen part can be another Qwen3.5-family model (models/qwenputer.py BASE); unset,
++it is Qwen3.5-4B, whose 32 layers the checkpoint holds."""
++
++import importlib
++
++from locals.models import qwenputer as Q
++
++
++def test_base_default_and_override(monkeypatch):
++    try:
++        monkeypatch.delenv("LOCALS_QWENPUTER_BASE", raising=False)
++        assert importlib.reload(Q).BASE == Q.DEFAULT_BASE == "mlx-community/Qwen3.5-4B-MLX-4bit"
++        monkeypatch.setenv("LOCALS_QWENPUTER_BASE", "mlx-community/Qwen3.8-27B-4bit")
++        assert importlib.reload(Q).BASE == "mlx-community/Qwen3.8-27B-4bit"
++    finally:
++        monkeypatch.delenv("LOCALS_QWENPUTER_BASE", raising=False)
++        importlib.reload(Q)
