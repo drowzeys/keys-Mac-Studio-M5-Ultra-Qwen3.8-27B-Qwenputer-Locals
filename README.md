@@ -62,8 +62,33 @@ rounds.
   oMLX's log never showed its MTP path loading from the settings file in headless mode, so it's reported as not
   measured, not as no gain.
 
-Raw results: [`results/`](results/). `omlx074-*`, `locals-4bit`, `mlxlm-4bit`: the speed sweep. `qp*`, `plain27b-*`:
-the question sets, each reply saved.
+### Prose, essays, reading and decode
+
+Client [`bench/workloads.py`](bench/workloads.py), streamed, temperature 0, thinking off. Prose: a short story,
+512 tokens. Essay: 1,024 tokens. Decode: tokens per second after the first token, per request. Reading: one prompt,
+time to its first token (each prompt starts with a unique line, so no cache helps).
+
+| | oMLX 0.7.4.dev1 | Locals, 27B | Locals, 27B + computer |
+|---|---:|---:|---:|
+| Prose, 1 request (tok/s) | 44.6 | **56.4** | **57.0** |
+| Prose, 4 at once (tok/s total) | 135.1 | **167.7** | **164.7** |
+| Essay, 1 request (tok/s) | 44.8 | **57.5** | **57.3** |
+| Essay, 4 at once (tok/s total) | 137.9 | **169.4** | **168.3** |
+| Decode per request, alone / 4 at once (tok/s) | 45 / 35 | **58 / 43** | **58 / 43** |
+| First token, short prompt | 0.21 s | **0.12 s** | **0.12-0.13 s** |
+| Reading ~2.7K tokens | **1.29 s (2,118 tok/s)** | 2.18 s (1,253) | 2.08 s (1,490) |
+| Reading ~11K tokens | **4.82 s (2,318 tok/s)** | 7.80 s (1,432) | 8.01 s (1,440) |
+| Reading ~46K tokens | **24.2 s (1,893 tok/s)** | 41.2 s (1,110) | 43.0 s (1,074) |
+
+- Writing (prose, essays, decode): Locals is about 1.25-1.3x faster than oMLX, alone and with 4 requests.
+- Reading long prompts: oMLX is about 1.7x faster. For one long document or a big codebase in the prompt, oMLX
+  answers sooner; for writing and many agents, Locals.
+- The computer costs nothing on ordinary work: same speed as the plain 27B. Its prompts are about 370 tokens longer
+  (the `calc` tool's description). The first run's prose number with the computer was 42.3 tok/s, right after start;
+  a repeat gave 57.0 (both in `results/`).
+
+Raw results: [`results/`](results/). `omlx074-*`, `locals-4bit`, `mlxlm-4bit`: the speed sweep. `wl-*`: prose,
+essays, reading and decode. `qp*`, `plain27b-*`: the question sets, each reply saved.
 
 ## What the one-shot does
 
