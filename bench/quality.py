@@ -5,22 +5,27 @@ reason briefly and end with "Answer: ...". Grading: the text after the last "Ans
 letter). Every reply is saved.
 
 Usage: python quality.py BASE_URL MODEL GSM8K.json MMLU.json OUT.json
+Env: THINK=1 thinking on (default off), MAXTOK (default 1536), PAR requests at once (default 8).\nLocals caps replies at 4,096 tokens unless started with --max-tokens: start it with --max-tokens MAXTOK or more.
 """
-import json, re, sys, time, urllib.request
+import json, os, re, sys, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 BASE, MODEL, GSM, MMLU, OUT = sys.argv[1:6]
+THINK = os.environ.get("THINK") == "1"
+MAXTOK = int(os.environ.get("MAXTOK", "1536"))
+PAR = int(os.environ.get("PAR", "8"))
 
 
-def ask(prompt, max_tokens=1536):
+def ask(prompt, max_tokens=None):
+    max_tokens = max_tokens or MAXTOK
     body = {"model": MODEL, "temperature": 0, "max_tokens": max_tokens,
-            "chat_template_kwargs": {"enable_thinking": False}, "messages": [{"role": "user", "content": prompt}]}
+            "chat_template_kwargs": {"enable_thinking": THINK}, "messages": [{"role": "user", "content": prompt}]}
     req = urllib.request.Request(BASE + "/chat/completions", data=json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json", "Authorization": "Bearer x"})
     t = time.time()
     r = json.load(urllib.request.urlopen(req, timeout=1800))
     m = r["choices"][0]["message"]
-    return {"content": m.get("content") or "", "reasoning": m.get("reasoning_content") or "",
+    return {"finish": r["choices"][0].get("finish_reason"), "content": m.get("content") or "", "reasoning": m.get("reasoning_content") or "",
             "tokens": r.get("usage", {}).get("completion_tokens"), "s": round(time.time() - t, 2)}
 
 
@@ -57,14 +62,15 @@ def mmlu(x):
 
 
 ask("Say hello.", 16)  # warm-up
-res = {"base": BASE, "model": MODEL}
+res = {"base": BASE, "model": MODEL, "thinking": THINK, "max_tokens": MAXTOK}
 for name, f, data in (("gsm8k", gsm, json.load(open(GSM))), ("mmlu", mmlu, json.load(open(MMLU)))):
     t = time.time()
-    with ThreadPoolExecutor(8) as ex:
+    with ThreadPoolExecutor(PAR) as ex:
         rows = list(ex.map(f, data))
     ok = sum(r["ok"] for r in rows)
     res[name] = {"right": ok, "of": len(rows), "wall_s": round(time.time() - t, 1),
-                 "used_computer": sum(1 for r in rows if r["reasoning"]), "rows": rows}
+                 "capped": sum(1 for r in rows if r["finish"] == "length"),
+                 "used_computer": sum(1 for r in rows if "<function=" in r["reasoning"]), "rows": rows}
     print(f"{name}: {ok}/{len(rows)} right, {res[name]['wall_s']} s, replies with a computer run: "
-          f"{res[name]['used_computer']}", flush=True)
+          f"{res[name]['used_computer']}, capped: {res[name]['capped']}", flush=True)
 json.dump(res, open(OUT, "w"), indent=1)

@@ -87,30 +87,36 @@ time to its first token (each prompt starts with a unique line, so no cache help
   (the `calc` tool's description). The first run's prose number with the computer was 42.3 tok/s, right after start;
   a repeat gave 57.0 (both in `results/`).
 
-### Answer quality on ordinary questions
+### Answer quality on ordinary questions, thinking off and on
 
 Client [`bench/quality.py`](bench/quality.py): 100 GSM8K maths word problems (the first 100 of the test set) and 100
-MMLU questions (10 from each of 10 subjects), in [`bench/evalsets/`](bench/evalsets/). Temperature 0, thinking off,
-up to 1,536 tokens per reply, graded on the reply's last "Answer:" line.
+MMLU questions (10 from each of 10 subjects), in [`bench/evalsets/`](bench/evalsets/). Temperature 0, graded on the
+reply's last "Answer:" line. Thinking off: up to 1,536 tokens per reply, 8 at once. Thinking on: up to 16,384, 16 at
+once, server started with `--max-tokens 16384` (Locals caps replies at 4,096 tokens otherwise).
 
-| Locals, Qwen3.8-27B 4-bit | alone | + calc | + toolbox |
-|---|---:|---:|---:|
-| GSM8K, right of 100 | 95 | **98** | 95 |
-| MMLU, right of 100 | 88 | 87 | **90** |
-| Replies that used the computer (GSM8K) | | 1 | 4 |
-| Replies cut off at 1,536 tokens (GSM8K + MMLU) | 9 | 4 | **0** |
-| Median reply length, GSM8K / MMLU (tokens) | 368 / 451 | 214 / 301 | **142 / 248** |
+| Locals, Qwen3.8-27B 4-bit | alone, off | + calc, off | + toolbox, off | alone, on | + calc, on | + toolbox, on |
+|---|---:|---:|---:|---:|---:|---:|
+| GSM8K, right of 100 | 95 | **98** | 95 | 97 | 97 | 96 |
+| MMLU, right of 100 | 88 | 87 | **90** | 88 | 86 | 83 |
+| GSM8K replies that used the computer | | 1 | 4 | | 12 | 99 |
+| Replies cut off (both sets) | 9 | 4 | **0** | 6 | 5 | 7 |
+| Mean reply, GSM8K / MMLU (tokens) | | | | 741 / 2,276 | 569 / 1,856 | 568 / 1,106 |
+| Median reply, GSM8K / MMLU (tokens) | 368 / 451 | 214 / 301 | **142 / 248** | 264 / 341 | 257 / 335 | 280 / 494 |
+| Time for 100 GSM8K + 100 MMLU | 382 s | 292 s | 293 s | 1,222 s | 944 s | 1,089 s |
 
-- The computer doesn't make the 27B worse on ordinary questions. Within this test's noise (a few points on 100), the
-  three score the same.
-- It's rarely called here: GSM8K's numbers are small, and the 27B does them in its head.
-- The tool's instructions make the 27B answer more directly. Its replies are 35-60% shorter and it stops going in
-  circles. Most of the plain 27B's misses are replies that ran out of tokens while it second-guessed itself.
-- Most misses are the same question in all three columns. Two GSM8K items are dataset quirks: #93 wants 36 for
-  400/11 s, and #85 gets 48 everywhere.
+- On these questions thinking buys little: 1-2 points on GSM8K, none on MMLU, for 3-4 times the time.
+- The computer doesn't hurt with thinking off; with the tool's instructions the 27B also answers more directly.
+- With thinking on the 27B calls the computer far more (the toolbox: 99 of 100 GSM8K replies) without scoring
+  higher, and a few replies fail in ways the plain 27B doesn't: the same `calc` call repeated 41 and 73 times until
+  the reply stopped, and a `calc` on `0.25/(40**0.5)` returning `error` after which the reply ended without an
+  answer. Two toolbox replies stopped at 2,829 and 3,580 tokens with no tool call, a cause not traced yet.
+- Shared misses: most wrong answers are the same question in every column. Two GSM8K items are dataset quirks: #93
+  wants 36 for 400/11 s, and #85's gold answer 44 is never reached.
+- `quality-think-*` in `results/` is a first thinking-on run made before finding Locals' 4,096-token cap; it's kept
+  for the record, not used above.
 
 Raw results: [`results/`](results/). `omlx074-*`, `locals-4bit`, `mlxlm-4bit`: the speed sweep. `wl-*`: prose,
-essays, reading and decode. `qp*`, `plain27b-*`: the question sets, each reply saved. `quality-*`: GSM8K and MMLU.
+essays, reading and decode. `qp*`, `plain27b-*`: the question sets, each reply saved. `quality-*`: GSM8K and MMLU (`quality-think16k-*`: thinking on).
 
 ## What the one-shot does
 
