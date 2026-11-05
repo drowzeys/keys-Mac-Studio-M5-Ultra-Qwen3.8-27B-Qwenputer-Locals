@@ -77,7 +77,7 @@ the question sets, each reply saved.
 
 ## The patch
 
-Six lines in Locals, [offered upstream](https://github.com/Generated-Computers/Locals/pulls):
+Six lines in Locals, [offered upstream as Locals PR #11](https://github.com/Generated-Computers/Locals/pull/11):
 
 - `LOCALS_QWENPUTER_BASE` names Qwen's part; unset, it's Qwen3.5-4B as before.
 - Locals keeps prompt states on disk across restarts, in a folder named after the model. Both Qwen parts were
